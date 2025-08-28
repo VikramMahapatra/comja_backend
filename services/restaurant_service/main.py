@@ -2,9 +2,12 @@ from fastapi import FastAPI
 from routers import restaurant
 import models, database
 
-app = FastAPI(title="Restaurant Service")
+app = FastAPI(
+    title="Restaurant Service",
+    description="CRUD operations for restaurants, menus, licenses with JWT auth",
+    version="1.0.0"
+)
 
-# Create tables on startup
 @app.on_event("startup")
 def on_startup():
     database.Base.metadata.create_all(bind=database.engine)

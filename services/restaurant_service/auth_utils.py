@@ -1,32 +1,49 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
-from typing import Optional
 import os
 from dotenv import load_dotenv
+from sqlalchemy.orm import Session
 
-# Load environment variables from .env file
+from database import get_db  # ✅ Now works
+
+# Load environment variables
 load_dotenv()
 
-# This secret key should match the one used in the Auth Service
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")  # TODO: Replace with env var or config
-ALGORITHM = "HS256"
+SECRET_KEY = os.getenv("JWT_SECRET", "secret")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+security = HTTPBearer()
 
-def decode_token(token: str) -> Optional[dict]:
+def verify_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except JWTError:
         return None
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    payload = decode_token(token)
-    if not payload:
+# Dependency to get current user
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+    token = credentials.credentials
+    payload = verify_token(token)
+
+    if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail="Invalid or expired token"
         )
-    return payload
+
+    # ⚠️ Replace with your actual User model and service
+    # Example: user = db.query(User).filter(User.id == payload.get("id")).first()
+    user = {"user_id": payload.get("user_id"), "role": payload.get("role")}
+
+
+    if user is ["user_id"] is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+    return user

@@ -20,6 +20,7 @@ def require_superadmin(token: str = Depends(oauth2_scheme), db: Session = Depend
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta

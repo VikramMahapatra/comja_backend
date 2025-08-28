@@ -46,8 +46,8 @@ class RestaurantTimingOut(RestaurantTimingBase):
 
 class RestaurantOut(RestaurantBase):
     id: int
-    owner_id: int
-    approved: str
+    owner_id:Optional[int]= None
+    approved: Optional[str] = None
     menu_items: List[MenuItemOut] = []
     timings: List[RestaurantTimingOut] = []
     class Config:
